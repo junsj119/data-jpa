@@ -8,7 +8,6 @@ import javax.persistence.*;
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(of = {"id", "username", "age"})   //연관관계 관계는 toString 피하자!
-
 public class Member {
     @Id @GeneratedValue
     @Column(name="member_id")
