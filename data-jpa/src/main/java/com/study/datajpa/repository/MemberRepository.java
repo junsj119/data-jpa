@@ -5,16 +5,18 @@ import com.study.datajpa.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
 import java.util.List;
 import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member>findByUsernameAndAgeGreaterThan(String username, int age);
 
+    List<Member>findByUsername(String username);
     @Query("select m from Member m where m.username = :username and m.age = :age")
     List<Member>findUser(@Param("username")String username, @Param("age") int age);
 
@@ -34,4 +36,22 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 //    @Query(value = "select m from Member m left join m.team t",
 //                countQuery = "select count(m) from Member m")
 //    Page<Member>findByAge(int age, Pageable pageable);
+
+    @Modifying
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int bulkAgePlus(@Param("age")int age);
+
+    //Member가 조회될 때 한번에 team도 가져온다. 원래는 Lazy로 되어있으면 Proxy객체를 가져온다.
+    @Query("select m from Member m left join fetch m.team")
+    List<Member>findMemberFetchJoin();
+
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member>findAll();
+
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyUsername(String username);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member>findLockByUsername(String username);
 }
